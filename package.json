@@ -1,0 +1,17 @@
+{
+  "name": "daily-confidence-poll",
+  "version": "1.0.0",
+  "description": "um app para votar na confiança de entrega da sprint nas dailies",
+  "repository": "git@github.com:ditointernet/daily-confidence-poll.git",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "private": true,
+  "scripts": {
+    "firebase": "firebase"
+  },
+  "devDependencies": {
+    "firebase-tools": "11.0.1"
+  }
+}
