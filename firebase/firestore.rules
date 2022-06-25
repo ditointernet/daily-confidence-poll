@@ -1,17 +1,46 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    match /polls/{pollId} {
+      allow create: if
+      	isAuthenticated() &&
+        hasDitoEmail() &&
+        followsPollSchema();
+
+      match /votes/{voteId} {
+        allow create: if
+          isAuthenticated() &&
+          hasDitoEmail();
+      }
     }
     
-    match /polls {
-      allow create: if true;
+    match /{document=**} {
+      allow read, write: if false;
     }
     
     // match /vote/{voteDocumentId} {
     	// allow create: if (get(/polls/idDaPoll).exists) true;
     	// idDaPoll:idDoUsuario
     // }
+  }
+
+  function isAuthenticated() {
+    return request.auth != null;
+  }
+
+
+  function hasDitoEmail() {
+    return request.auth.token.email.matches('.*@dito[.]com[.]br');
+  }
+
+  function followsPollSchema() {
+    let allowedStatuses = ['NOT_STARTED'];
+    let requiredKeys = ['status', 'hasParticipantVoted'];
+    let newPoll = request.resource.data;
+
+    return newPoll.keys().hasOnly(requiredKeys) &&
+      newPoll.status in allowedStatuses &&
+      newPoll.hasParticipantVoted.size() == 1 && 
+      newPoll.hasParticipantVoted[request.auth.uid] == false;
   }
 }
