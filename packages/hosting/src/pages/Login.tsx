@@ -1,6 +1,8 @@
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 
+import { HOME } from "../constants/routes";
+
 const Login: React.FC = () => {
   const auth = getAuth();
   const navigate = useNavigate();
@@ -9,7 +11,7 @@ const Login: React.FC = () => {
     const provider = new GoogleAuthProvider();
 
     return signInWithPopup(auth, provider)
-      .then(() => navigate("/home"))
+      .then(() => navigate(HOME))
       .catch(console.error);
   }
 

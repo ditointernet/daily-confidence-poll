@@ -1,16 +1,29 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Home from "./pages/Home";
+import {
+  AuthenticatedRoute,
+  UnauthenticatedRoute,
+} from "./containers/middlewares";
+import { Home, Login } from "./pages";
+import { AUTH, AUTH_LOGIN, HOME } from "./constants/routes";
+import AuthProvider from "./containers/AuthProvider";
 
-function App() {
+function Router() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/*" element={<Navigate to="/login" />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path={AUTH} element={<UnauthenticatedRoute />}>
+          <Route path={AUTH_LOGIN} element={<Login />} />
+          <Route element={<Navigate to={AUTH_LOGIN} replace />} />
+        </Route>
+
+        <Route element={<AuthenticatedRoute />}>
+          <Route path={HOME} element={<Home />} />
+          <Route element={<Navigate to={HOME} replace />} />
+        </Route>
+      </Routes>
+    </AuthProvider>
   );
 }
 
-export default App;
+export default Router;
