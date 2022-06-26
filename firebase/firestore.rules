@@ -3,44 +3,129 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /polls/{pollId} {
       allow create: if
-      	isAuthenticated() &&
-        hasDitoEmail() &&
+      	isAuthenticatedAndHasDitoEmail() &&
         followsPollSchema();
+      allow update: if
+        isAuthenticatedAndHasDitoEmail() && 
+        (isUserJoiningOrLeaving() || isOwnerStartingOrFinishing());
+      allow get: if isAuthenticatedAndHasDitoEmail();
 
       match /votes/{voteId} {
         allow create: if
-          isAuthenticated() &&
-          hasDitoEmail();
+          isAuthenticatedAndHasDitoEmail() &&
+          canVote(pollId);
+        allow list: if
+          isAuthenticatedAndHasDitoEmail() &&
+          canSeeVotes(pollId);
       }
     }
     
     match /{document=**} {
       allow read, write: if false;
     }
-    
-    // match /vote/{voteDocumentId} {
-    	// allow create: if (get(/polls/idDaPoll).exists) true;
-    	// idDaPoll:idDoUsuario
-    // }
-  }
 
-  function isAuthenticated() {
-    return request.auth != null;
-  }
+    function isAuthenticatedAndHasDitoEmail() {
+      return request.auth != null &&
+        'email' in request.auth.token &&
+        request.auth.token.email.matches('.*@dito[.]com[.]br');
+    }
 
+    // has all the required fields
+    // is setting themselves as owner
+    // is created as a non-started poll
+    // is creating with an empty participants list
+    // createdAt and updatedAt have server time
+    function followsPollSchema() {
+      let requiredKeys = ['ownerId', 'status', 'hasParticipantVoted', 'createdAt', 'updatedAt'];
+      let newPoll = request.resource.data;
 
-  function hasDitoEmail() {
-    return request.auth.token.email.matches('.*@dito[.]com[.]br');
-  }
+      return newPoll.keys().hasOnly(requiredKeys) &&
+        newPoll.ownerId == request.auth.uid &&
+        newPoll.status == 'NOT_STARTED' &&
+        newPoll.hasParticipantVoted.size() == 0 && 
+        newPoll.createdAt == request.time &&
+        newPoll.updatedAt == request.time;
+    }
 
-  function followsPollSchema() {
-    let allowedStatuses = ['NOT_STARTED'];
-    let requiredKeys = ['status', 'hasParticipantVoted'];
-    let newPoll = request.resource.data;
+    // is only updating participants list and updatedAt
+    // poll is not yet started
+    // updatedAt has server time
+    // is only adding or removing themselves
+    function isUserJoiningOrLeaving() {
+      let allowedKeys = ['hasParticipantVoted', 'updatedAt'];
+      let newPoll = request.resource.data;
+      let currentPoll = resource.data;
+      let currentUid = request.auth.uid;
+      let participantChanges = newPoll.hasParticipantVoted.diff(currentPoll.hasParticipantVoted);
 
-    return newPoll.keys().hasOnly(requiredKeys) &&
-      newPoll.status in allowedStatuses &&
-      newPoll.hasParticipantVoted.size() == 1 && 
-      newPoll.hasParticipantVoted[request.auth.uid] == false;
+      return newPoll.keys().hasOnly(requiredKeys) &&
+        currentPoll.status == 'NOT_STARTED' &&
+        newPoll.updatedAt == request.time &&
+        (
+          participantChanges.removedKeys() == [currentUid].toSet() ||
+          (
+            participantChanges.addedKeys() == [currentUid].toSet() &&
+            newPoll.hasParticipantVoted[currentUid] == false
+          )
+        );
+    }
+
+    // is owner of the poll &&
+    // is only updating status and updatedAt
+    // updatedAt has server time
+    // is starting poll OR ending poll
+    function isOwnerStartingOrFinishing() {
+      let allowedKeys = ['status', 'updatedAt'];
+      let newPoll = request.resource.data;
+      let currentPoll = resource.data;
+
+      return currentPoll.ownerId == request.auth.uid &&
+        newPoll.keys().hasOnly(allowedKeys) &&
+        newPoll.updatedAt == request.time &&
+        (
+          (
+            currentPoll.status == 'NOT_STARTED' &&
+            newPoll.status == 'VOTING_IN_PROGRESS'
+          ) ||
+          (
+            currentPoll.status == 'VOTING_IN_PROGRESS' &&
+            newPoll.status == 'VOTING_FINISHED'
+          )
+        );
+    }
+
+    // poll exists &&
+    // has joined poll &&
+    // not voted before &&
+    // vote id is own currentUid
+    function canVote(pollId) {
+      let poll = get(/databases/$(database)/documents/polls/$(pollId)).data;
+      let currentUid = request.auth.uid;
+      let newVote = request.resource.data;
+      let allowedKeys = ['vote', 'createdAt', 'updatedAt'];
+      let allowedVotes = [1, 2, 3];
+
+      return poll != null &&
+        'status' in poll &&
+        poll.status == 'VOTING_IN_PROGRESS' &&
+        'hasParticipantVoted' in poll &&
+        poll.hasParticipantVoted[currentUid] == false &&
+        !exists(/databases/$(database)/documents/polls/$(pollId)/votes/$(currentUid)) &&
+        request.resource.id == currentUid &&
+        newVote.keys().hasOnly(allowedKeys) &&
+        newVote.createdAt == request.time &&
+        newVote.updatedAt == request.time &&
+        newVote.vote in allowedVotes;
+    }
+
+    // poll exists &&
+    // poll has finished
+    function canSeeVotes(pollId) {
+      let poll = get(/databases/$(database)/documents/polls/$(pollId)).data;
+
+      return poll !== null &&
+        'status' in poll &&
+        poll.status == 'FINISHED';
+    }
   }
 }
