@@ -22,9 +22,8 @@ export default functions
   ) {
     const pollId = context.params.pollId as string;
     const voteId = context.params.voteId as string;
-    const poll = pollsCollection.doc(pollId);
 
-    await poll.update({
-      [`participants.${voteId}.hasVoted`]: true,
+    await pollsCollection.doc(pollId).update({
+      [`hasParticipantVoted.${voteId}`]: true,
     });
   });

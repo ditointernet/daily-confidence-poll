@@ -9,7 +9,7 @@ const allowedDomainsRegex = /^.*@(dito\.com\.br|uriell\.dev)$/;
 export default functions
   .region("southamerica-east1")
   .auth.user()
-  .beforeCreate(async function onFirebaseAuthUserCreated(user) {
+  .onCreate(async function onFirebaseAuthUserCreated(user) {
     const googleProvider = user.providerData.find(
       (provider) => provider.providerId === "google.com"
     );

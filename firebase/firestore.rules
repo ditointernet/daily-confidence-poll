@@ -27,7 +27,10 @@ service cloud.firestore {
     function isAuthenticatedAndHasDitoEmail() {
       return request.auth != null &&
         'email' in request.auth.token &&
-        request.auth.token.email.matches('.*@dito[.]com[.]br');
+        (
+          request.auth.token.email.matches('.*@dito[.]com[.]br') ||
+          request.auth.token.email.matches('.*@uriell[.]dev')
+        );
     }
 
     // has all the required fields
@@ -36,13 +39,13 @@ service cloud.firestore {
     // is creating with an empty participants list
     // createdAt and updatedAt have server time
     function followsPollSchema() {
-      let requiredKeys = ['ownerId', 'status', 'hasParticipantVoted', 'createdAt', 'updatedAt'];
+      let requiredKeys = ['ownerId', 'status', 'participants', 'createdAt', 'updatedAt'];
       let newPoll = request.resource.data;
 
       return newPoll.keys().hasOnly(requiredKeys) &&
         newPoll.ownerId == request.auth.uid &&
         newPoll.status == 'NOT_STARTED' &&
-        newPoll.hasParticipantVoted.size() == 0 && 
+        newPoll.participants.size() == 0 && 
         newPoll.createdAt == request.time &&
         newPoll.updatedAt == request.time;
     }
@@ -52,20 +55,22 @@ service cloud.firestore {
     // updatedAt has server time
     // is only adding or removing themselves
     function isUserJoiningOrLeaving() {
-      let allowedKeys = ['hasParticipantVoted', 'updatedAt'];
+      let allowedChangedKeys = ['participants', 'updatedAt'];
+      let allowedParticipantKeys = ['photoUrl', 'displayName', 'hasVoted'];
       let newPoll = request.resource.data;
       let currentPoll = resource.data;
       let currentUid = request.auth.uid;
-      let participantChanges = newPoll.hasParticipantVoted.diff(currentPoll.hasParticipantVoted);
+      let participantChanges = newPoll.participants.diff(currentPoll.participants);
 
-      return newPoll.keys().hasOnly(requiredKeys) &&
+      return newPoll.diff(currentPoll).changedKeys() == allowedChangedKeys.toSet() &&
         currentPoll.status == 'NOT_STARTED' &&
         newPoll.updatedAt == request.time &&
         (
           participantChanges.removedKeys() == [currentUid].toSet() ||
           (
             participantChanges.addedKeys() == [currentUid].toSet() &&
-            newPoll.hasParticipantVoted[currentUid] == false
+            newPoll.participants[currentUid].keys().hasOnly(allowedParticipantKeys) &&
+            newPoll.participants[currentUid].hasVoted == false
           )
         );
     }
@@ -75,12 +80,12 @@ service cloud.firestore {
     // updatedAt has server time
     // is starting poll OR ending poll
     function isOwnerStartingOrFinishing() {
-      let allowedKeys = ['status', 'updatedAt'];
+      let allowedChangedKeys = ['status', 'updatedAt'];
       let newPoll = request.resource.data;
       let currentPoll = resource.data;
 
       return currentPoll.ownerId == request.auth.uid &&
-        newPoll.keys().hasOnly(allowedKeys) &&
+        newPoll.diff(currentPoll).changedKeys() == allowedChangedKeys.toSet() &&
         newPoll.updatedAt == request.time &&
         (
           (
@@ -89,7 +94,7 @@ service cloud.firestore {
           ) ||
           (
             currentPoll.status == 'VOTING_IN_PROGRESS' &&
-            newPoll.status == 'VOTING_FINISHED'
+            newPoll.status == 'FINISHED'
           )
         );
     }
@@ -108,8 +113,9 @@ service cloud.firestore {
       return poll != null &&
         'status' in poll &&
         poll.status == 'VOTING_IN_PROGRESS' &&
-        'hasParticipantVoted' in poll &&
-        poll.hasParticipantVoted[currentUid] == false &&
+        'participants' in poll &&
+        currentUid in poll.participants &&
+        poll.participants[currentUid].hasVoted == false &&
         !exists(/databases/$(database)/documents/polls/$(pollId)/votes/$(currentUid)) &&
         request.resource.id == currentUid &&
         newVote.keys().hasOnly(allowedKeys) &&
@@ -123,7 +129,7 @@ service cloud.firestore {
     function canSeeVotes(pollId) {
       let poll = get(/databases/$(database)/documents/polls/$(pollId)).data;
 
-      return poll !== null &&
+      return poll != null &&
         'status' in poll &&
         poll.status == 'FINISHED';
     }
