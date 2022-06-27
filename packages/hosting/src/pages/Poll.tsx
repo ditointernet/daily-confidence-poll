@@ -3,7 +3,7 @@ import {
   deleteField,
   doc,
   documentId,
-  getDocs,
+  getDocsFromServer,
   getFirestore,
   onSnapshot,
   query,
@@ -44,12 +44,12 @@ const Poll: React.FC = () => {
   useEffect(() => {
     const participantIds = Object.keys(poll?.hasParticipantVoted ?? {});
 
-    if (!participantIds.length) return;
-
     const unsubscribe = onSnapshot(
       query(
         collection(firestore, "users"),
-        where(documentId(), "in", participantIds)
+        participantIds.length
+          ? where(documentId(), "in", participantIds)
+          : where(documentId(), "==", "non-existant-participant")
       ),
       (snapshot) =>
         setUsers(
@@ -66,7 +66,9 @@ const Poll: React.FC = () => {
 
   useEffect(() => {
     if (poll?.status === PollStatuses.FINISHED) {
-      getDocs(query(collection(firestore, "polls", pollId ?? "", "votes")))
+      getDocsFromServer(
+        query(collection(firestore, "polls", pollId ?? "", "votes"))
+      )
         .then((snapshot) =>
           setVotes(
             snapshot.docs.reduce(
