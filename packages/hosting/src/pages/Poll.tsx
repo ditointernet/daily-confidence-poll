@@ -3,7 +3,9 @@ import {
   deleteField,
   doc,
   documentId,
+  getDocs,
   getFirestore,
+  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
@@ -11,34 +13,74 @@ import {
   where,
 } from "firebase/firestore";
 import { useParams } from "react-router-dom";
-import { useDocumentData, useCollection } from "react-firebase-hooks/firestore";
+import { useDocumentData } from "react-firebase-hooks/firestore";
 
 import { useFirebaseAuthUser } from "../containers/AuthProvider";
-import { IPoll, PollStatuses } from "../constants/types";
+import {
+  IPoll,
+  IUser,
+  IVote,
+  PollStatuses,
+  VoteRange,
+} from "../constants/types";
 import Participant from "../components/Participant";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const Poll: React.FC = () => {
   const { pollId } = useParams<Record<"pollId", string>>();
 
   const firestore = getFirestore();
   const pollsCollection = collection(firestore, "polls");
-  const usersCollection = collection(firestore, "users");
   const pollDocumentRef = doc(pollsCollection, pollId);
-  const [pollDocument, isLoading, didError] = useDocumentData(pollDocumentRef);
-  const poll = pollDocument as IPoll;
 
-  const participantIds = Object.keys(poll?.hasParticipantVoted ?? {});
-  const [userDocuments] = useCollection(
-    query(
-      usersCollection,
-      participantIds.length
-        ? where(documentId(), "in", participantIds)
-        : where(documentId(), "==", "never-existing-user")
-    )
-  );
+  const [pollDocument, isLoading, didError] = useDocumentData(pollDocumentRef);
+  const poll = pollDocument as IPoll | undefined;
+
+  const [users, setUsers] = useState<Array<IUser & { id: string }>>([]);
+  const [votes, setVotes] = useState<Record<string, VoteRange>>({});
 
   const user = useFirebaseAuthUser()!;
+
+  useEffect(() => {
+    const participantIds = Object.keys(poll?.hasParticipantVoted ?? {});
+
+    if (!participantIds.length) return;
+
+    const unsubscribe = onSnapshot(
+      query(
+        collection(firestore, "users"),
+        where(documentId(), "in", participantIds)
+      ),
+      (snapshot) =>
+        setUsers(
+          snapshot.docs.map((user) => ({
+            id: user.id,
+            ...(user.data() as IUser),
+          }))
+        ),
+      (err) => console.error(err.code)
+    );
+
+    return () => unsubscribe();
+  }, [firestore, poll?.hasParticipantVoted]);
+
+  useEffect(() => {
+    if (poll?.status === PollStatuses.FINISHED) {
+      getDocs(query(collection(firestore, "polls", pollId ?? "", "votes")))
+        .then((snapshot) =>
+          setVotes(
+            snapshot.docs.reduce(
+              (acc, vote) => ({
+                ...acc,
+                [vote.id]: (vote.data() as IVote).vote,
+              }),
+              {}
+            )
+          )
+        )
+        .catch((err) => console.error(err.code));
+    }
+  }, [firestore, poll?.status, pollId]);
 
   if (didError) return <>Error</>;
   if (isLoading || !poll) return <>Loading</>;
@@ -58,7 +100,7 @@ const Poll: React.FC = () => {
   }
 
   function onAdvancePollClick() {
-    if (poll.status === PollStatuses.FINISHED) return;
+    if (!poll || poll.status === PollStatuses.FINISHED) return;
 
     updateDoc(pollDocumentRef, {
       status:
@@ -84,17 +126,19 @@ const Poll: React.FC = () => {
   const isCurrentUserParticipating = user.uid in poll.hasParticipantVoted;
   const isPollOwner = user.uid === poll.ownerId;
 
-  const participants = userDocuments
-    ? userDocuments.docs.map((userDoc) => ({
-        participantId: userDoc.id,
-        displayName: userDoc.data().displayName,
-        photoUrl: userDoc.data().photoUrl,
-        hasVoted: poll.hasParticipantVoted[userDoc.id],
+  const participants = users.length
+    ? users.map(({ id, displayName, photoUrl }) => ({
+        participantId: id,
+        displayName,
+        photoUrl,
+        hasVoted: poll.hasParticipantVoted[id],
+        vote: votes[id],
       }))
     : Object.entries(poll.hasParticipantVoted).map(
         ([participantId, hasVoted]) => ({
           participantId,
           hasVoted,
+          vote: votes[participantId],
         })
       );
 
@@ -104,7 +148,7 @@ const Poll: React.FC = () => {
       <h3>{poll.status}</h3>
       {isPollOwner &&
         poll.status !== PollStatuses.FINISHED &&
-        !!participantIds.length && (
+        !!participants.length && (
           <button onClick={onAdvancePollClick}>
             {poll.status === PollStatuses.NOT_STARTED
               ? "Iniciar poll"
@@ -128,7 +172,7 @@ const Poll: React.FC = () => {
       {poll.status === PollStatuses.NOT_STARTED && (
         <>
           <br />
-          {!isCurrentUserParticipating && (
+          {!isCurrentUserParticipating && participants.length < 10 && (
             <button onClick={onJoinPollClick}>entrar na poll</button>
           )}
           <br />

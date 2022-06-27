@@ -13,3 +13,22 @@ export interface IPoll extends DocumentData {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+export enum VoteRange {
+  "NO_CONFIDENCE" = 1,
+  "MEDIUM_CONFIDENCE" = 2,
+  "HIGH_CONFIDENCE" = 3,
+}
+
+export interface IVote extends DocumentData {
+  vote: VoteRange;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface IUser extends DocumentData {
+  displayName: string;
+  photoUrl: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
