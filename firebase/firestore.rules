@@ -19,6 +19,10 @@ service cloud.firestore {
           canSeeVotes(pollId);
       }
     }
+
+    match /users/{userId} {
+      allow get, list: if isAuthenticatedAndHasDitoEmail(); 
+    }
     
     match /{document=**} {
       allow read, write: if false;
@@ -39,13 +43,13 @@ service cloud.firestore {
     // is creating with an empty participants list
     // createdAt and updatedAt have server time
     function followsPollSchema() {
-      let requiredKeys = ['ownerId', 'status', 'participants', 'createdAt', 'updatedAt'];
+      let requiredKeys = ['ownerId', 'status', 'hasParticipantVoted', 'createdAt', 'updatedAt'];
       let newPoll = request.resource.data;
 
       return newPoll.keys().hasOnly(requiredKeys) &&
         newPoll.ownerId == request.auth.uid &&
         newPoll.status == 'NOT_STARTED' &&
-        newPoll.participants.size() == 0 && 
+        newPoll.hasParticipantVoted.size() == 0 && 
         newPoll.createdAt == request.time &&
         newPoll.updatedAt == request.time;
     }
@@ -55,12 +59,12 @@ service cloud.firestore {
     // updatedAt has server time
     // is only adding or removing themselves
     function isUserJoiningOrLeaving() {
-      let allowedChangedKeys = ['participants', 'updatedAt'];
+      let allowedChangedKeys = ['hasParticipantVoted', 'updatedAt'];
       let allowedParticipantKeys = ['photoUrl', 'displayName', 'hasVoted'];
       let newPoll = request.resource.data;
       let currentPoll = resource.data;
       let currentUid = request.auth.uid;
-      let participantChanges = newPoll.participants.diff(currentPoll.participants);
+      let participantChanges = newPoll.hasParticipantVoted.diff(currentPoll.hasParticipantVoted);
 
       return newPoll.diff(currentPoll).changedKeys() == allowedChangedKeys.toSet() &&
         currentPoll.status == 'NOT_STARTED' &&
@@ -69,8 +73,7 @@ service cloud.firestore {
           participantChanges.removedKeys() == [currentUid].toSet() ||
           (
             participantChanges.addedKeys() == [currentUid].toSet() &&
-            newPoll.participants[currentUid].keys().hasOnly(allowedParticipantKeys) &&
-            newPoll.participants[currentUid].hasVoted == false
+            newPoll.hasParticipantVoted[currentUid] == false
           )
         );
     }
@@ -90,11 +93,13 @@ service cloud.firestore {
         (
           (
             currentPoll.status == 'NOT_STARTED' &&
-            newPoll.status == 'VOTING_IN_PROGRESS'
+            newPoll.status == 'VOTING_IN_PROGRESS' &&
+            currentPoll.hasParticipantVoted.size() > 0
           ) ||
           (
             currentPoll.status == 'VOTING_IN_PROGRESS' &&
-            newPoll.status == 'FINISHED'
+            newPoll.status == 'FINISHED' &&
+            !(false in currentPoll.hasParticipantVoted.values())
           )
         );
     }
@@ -113,9 +118,9 @@ service cloud.firestore {
       return poll != null &&
         'status' in poll &&
         poll.status == 'VOTING_IN_PROGRESS' &&
-        'participants' in poll &&
-        currentUid in poll.participants &&
-        poll.participants[currentUid].hasVoted == false &&
+        'hasParticipantVoted' in poll &&
+        currentUid in poll.hasParticipantVoted &&
+        poll.hasParticipantVoted[currentUid] == false &&
         !exists(/databases/$(database)/documents/polls/$(pollId)/votes/$(currentUid)) &&
         request.resource.id == currentUid &&
         newVote.keys().hasOnly(allowedKeys) &&
