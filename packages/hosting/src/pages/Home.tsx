@@ -1,35 +1,33 @@
-// import { useEffect, useState } from "react";
-// import { getAuth, onAuthStateChanged, User } from "firebase/auth";
-
 import { getAuth, signOut } from "firebase/auth";
+import {
+  addDoc,
+  collection,
+  getFirestore,
+  serverTimestamp,
+} from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+
+import { POLL_BY_ID } from "../constants/routes";
 import { useFirebaseAuthUser } from "../containers/AuthProvider";
 
 const Home: React.FC = () => {
-  const auth = getAuth();
-  // const firestore = getFirestore();
-  // const pollsCollection = collection(firestore, "polls");
   const user = useFirebaseAuthUser()!;
+  const navigate = useNavigate();
+
+  const auth = getAuth();
+  const firestore = getFirestore();
+  const pollsCollection = collection(firestore, "polls");
 
   function onCreatePollClick() {
-    if (!user) return;
-
-    // return addDoc(pollsCollection, {
-    //   ownerId: user.uid,
-    //   status: "NOT_STARTED",
-    //   hasParticipantVoted: {},
-    //   createdAt: serverTimestamp(),
-    //   updatedAt: serverTimestamp(),
-    // })
-    //   .then((poll) => {
-    //     const voteRef = doc(pollsCollection, poll.id, "votes", user.uid);
-
-    //     return setDoc(voteRef, {
-    //       vote: 3,
-    //       createdAt: serverTimestamp(),
-    //       updatedAt: serverTimestamp(),
-    //     }).then(() => console.log("created"));
-    //   })
-    //   .catch((err) => console.error(err.code));
+    return addDoc(pollsCollection, {
+      ownerId: user.uid,
+      status: "NOT_STARTED",
+      hasParticipantVoted: {},
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
+      .then((poll) => navigate(POLL_BY_ID.replace(":pollId", poll.id)))
+      .catch((err) => console.error(err.code));
   }
 
   return (
