@@ -60,7 +60,6 @@ service cloud.firestore {
     // is only adding or removing themselves
     function isUserJoiningOrLeaving() {
       let allowedChangedKeys = ['hasParticipantVoted', 'updatedAt'];
-      let allowedParticipantKeys = ['photoUrl', 'displayName', 'hasVoted'];
       let newPoll = request.resource.data;
       let currentPoll = resource.data;
       let currentUid = request.auth.uid;
