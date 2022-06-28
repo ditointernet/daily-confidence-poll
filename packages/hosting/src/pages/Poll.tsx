@@ -174,7 +174,7 @@ const Poll: React.FC = () => {
       {poll.status === PollStatuses.NOT_STARTED && (
         <>
           <br />
-          {!isCurrentUserParticipating && participants.length < 10 && (
+          {!isCurrentUserParticipating && participants.length <= 10 && (
             <button onClick={onJoinPollClick}>entrar na poll</button>
           )}
           <br />

@@ -68,7 +68,7 @@ service cloud.firestore {
       return newPoll.diff(currentPoll).changedKeys() == allowedChangedKeys.toSet() &&
         currentPoll.status == 'NOT_STARTED' &&
         newPoll.updatedAt == request.time &&
-        newPoll.hasParticipantVoted.size() < 10 &&
+        newPoll.hasParticipantVoted.size() <= 10 &&
         (
           participantChanges.removedKeys() == [currentUid].toSet() ||
           (
