@@ -36,33 +36,59 @@ const Poll: React.FC = () => {
   const [pollDocument, isLoading, didError] = useDocumentData(pollDocumentRef);
   const poll = pollDocument as IPoll | undefined;
 
-  const [users, setUsers] = useState<Array<IUser & { id: string }>>([]);
+  const [_users, setUsers] = useState<
+    Record<number, Array<IUser & { id: string }>>
+  >([]);
   const [votes, setVotes] = useState<Record<string, VoteRange>>({});
+  const users = Object.values(_users).flat();
+  const currentSnapshots = Object.keys(_users).length;
 
   const user = useFirebaseAuthUser()!;
 
   useEffect(() => {
     const participantIds = Object.keys(poll?.hasParticipantVoted ?? {});
 
-    const unsubscribe = onSnapshot(
-      query(
-        collection(firestore, "users"),
-        participantIds.length
-          ? where(documentId(), "in", participantIds)
-          : where(documentId(), "==", "non-existant-participant")
-      ),
-      (snapshot) =>
-        setUsers(
-          snapshot.docs.map((user) => ({
-            id: user.id,
-            ...(user.data() as IUser),
-          }))
+    if (!participantIds.length) return setUsers([]);
+
+    const partitionedIds = partitionBy(participantIds, 10);
+    const desiredSnapshots = partitionedIds.length;
+
+    if (desiredSnapshots < currentSnapshots) {
+      setUsers((state) => {
+        const newState = { ...state };
+
+        for (
+          let i = desiredSnapshots;
+          i <= currentSnapshots - desiredSnapshots;
+          i++
+        ) {
+          delete newState[i];
+        }
+
+        return newState;
+      });
+    }
+
+    const unsubscribeFns = partitionedIds.map((partition, index) =>
+      onSnapshot(
+        query(
+          collection(firestore, "users"),
+          where(documentId(), "in", partition)
         ),
-      (err) => console.error(err.code)
+        (snapshot) =>
+          setUsers((state) => ({
+            ...state,
+            [index]: snapshot.docs.map((user) => ({
+              id: user.id,
+              ...(user.data() as IUser),
+            })),
+          })),
+        (err) => console.error(err.code)
+      )
     );
 
-    return () => unsubscribe();
-  }, [firestore, poll?.hasParticipantVoted]);
+    return () => unsubscribeFns.forEach((unsubscribeFn) => unsubscribeFn());
+  }, [firestore, poll?.hasParticipantVoted, currentSnapshots]);
 
   useEffect(() => {
     if (poll?.status === PollStatuses.FINISHED) {
@@ -81,6 +107,8 @@ const Poll: React.FC = () => {
           )
         )
         .catch((err) => console.error(err.code));
+    } else {
+      setVotes({});
     }
   }, [firestore, poll?.status, pollId]);
 
@@ -125,6 +153,7 @@ const Poll: React.FC = () => {
       updatedAt: serverTimestamp(),
     }).catch((err) => console.error(err.code));
   }
+
   const isCurrentUserParticipating = user.uid in poll.hasParticipantVoted;
   const isPollOwner = user.uid === poll.ownerId;
 
@@ -190,5 +219,15 @@ const Poll: React.FC = () => {
     </>
   );
 };
+
+function partitionBy<T>(arr: T[], size: number): T[][] {
+  const partitions = [];
+
+  for (let i = 0; i < arr.length; i += size) {
+    partitions.push(arr.slice(i, i + size));
+  }
+
+  return partitions;
+}
 
 export default Poll;
