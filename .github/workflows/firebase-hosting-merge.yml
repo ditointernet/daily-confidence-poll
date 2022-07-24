@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting on merge
+name: Deploy to Firebase on merge
 on:
   push:
     branches:
@@ -8,10 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: yarn && yarn --cwd packages/hosting build
-      - uses: ditointernet/action-hosting-deploy@v0
+      - uses: actions/setup-node@v2
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DAILY_CONFIDENCE_POLL }}'
-          channelId: live
-          projectId: daily-confidence-poll
+          cache: 'yarn'
+          node-version: 16
+      - run: yarn && yarn workspaces run build
+      - name: Configure SA file
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DAILY_CONFIDENCE_POLL }}' > $HOME/gcloud.json
+      - name: Deploy to Firebase
+        run: export GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcloud.json && yarn firebase --non-interactive deploy
+        env:
+          REACT_APP_FIREBASE_PROJECT_ID: ${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}
+          REACT_APP_FIREBASE_AUTH_DOMAIN: ${{ secrets.REACT_APP_FIREBASE_AUTH_DOMAIN }}
+          REACT_APP_FIREBASE_MEASUREMENT_ID: ${{ secrets.REACT_APP_FIREBASE_MEASUREMENT_ID }}
+          REACT_APP_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.REACT_APP_FIREBASE_MESSAGING_SENDER_ID }}
+          REACT_APP_FIREBASE_API_KEY: ${{ secrets.REACT_APP_FIREBASE_API_KEY }}
+          REACT_APP_FIREBASE_APP_ID: ${{ secrets.REACT_APP_FIREBASE_APP_ID }}
