@@ -9,6 +9,7 @@ service cloud.firestore {
         isAuthenticatedAndHasDitoEmail() && 
         (isUserJoiningOrLeaving() || isOwnerStartingOrFinishing());
       allow get: if isAuthenticatedAndHasDitoEmail();
+      allow list: if isAuthenticatedAndHasDitoEmail() && isOwner();
 
       match /votes/{voteId} {
         allow create: if
@@ -101,6 +102,13 @@ service cloud.firestore {
             !(false in currentPoll.hasParticipantVoted.values())
           )
         );
+    }
+
+    // is owner of the poll &&
+    function isOwner() {
+      let currentPoll = resource.data;
+
+      return currentPoll.ownerId == request.auth.uid;
     }
 
     // poll exists &&
