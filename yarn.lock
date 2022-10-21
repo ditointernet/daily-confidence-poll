@@ -1379,12 +1379,7 @@
   resolved "https://registry.yarnpkg.com/@ditointernet/uai-foundation/-/uai-foundation-1.1.1.tgz#a309f4d6c70d7aa50aa84bb2f6e5b19643932765"
   integrity sha512-8If5+HJagurrXNlZEeZs6Cfh1KjcmFt/+oQ7wFHz3J6MzAeO4YUpKojyCszOkWMdDH84Hztrg818pm6hnv2f4Q==
 
-"@ditointernet/uai-icons@1.5.1":
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/@ditointernet/uai-icons/-/uai-icons-1.5.1.tgz#97438707c985d4e7b9c51de6854f040f19b441f6"
-  integrity sha512-+4sGAFj7dZ1OhBygj7xVk4BO10k54T8LFAAuK28dI+yJyLd1paNoP7BMBWvpiA/DSfj5yPIpg8TkCGRIG8YkoQ==
-
-"@ditointernet/uai-icons@^1.2.16":
+"@ditointernet/uai-icons@1.6.0", "@ditointernet/uai-icons@^1.2.16":
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/@ditointernet/uai-icons/-/uai-icons-1.6.0.tgz#75f7c244eb667741ec6d6a47d6f710db37af3eca"
   integrity sha512-uYQFwyQdpfo6I+sTvQClnaipa7+JWuXzEEKJGMEzkKVLwcXtVUtiGduXytjvlbAH7tueUKZbbRnzOCcoE8vSpQ==

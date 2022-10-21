@@ -1,5 +1,6 @@
 import { Button, Card, Text, Flex, Badge } from "@ditointernet/uai-components";
-import { TYPOGRAPHY, GRID } from "@ditointernet/uai-foundation";
+import { TYPOGRAPHY, GRID, COLORS } from "@ditointernet/uai-foundation";
+import { ArrowLeft } from "@ditointernet/uai-icons";
 import { getAuth, signOut } from "firebase/auth";
 import {
   addDoc,
@@ -7,9 +8,9 @@ import {
   getFirestore,
   serverTimestamp,
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-import { POLL_BY_ID } from "../constants/routes";
+import { MY_POLLS, POLL_BY_ID } from "../constants/routes";
 import { useFirebaseAuthUser } from "../containers/AuthProvider";
 
 const Home: React.FC = () => {
@@ -34,26 +35,41 @@ const Home: React.FC = () => {
 
   return (
     <Flex justifyContent="center" alignItems="center" height="100%">
-      <Card
-        padding={GRID(2)}
-        style={{ flexDirection: "column", maxWidth: "320px", width: "100%" }}
-      >
-        <Text>
-          <b>Usuário:</b> {user.email}
-        </Text>
-        <Flex mt={GRID(1)}>
-          <Text weight={TYPOGRAPHY.FontWeight.SEMI_BOLD}>Sala: </Text>
-          <Badge statusText={user.uid} />
-        </Flex>
-        <Flex flexDirection="column" gap={GRID(1)} mt={GRID(3)}>
-          <Button onClick={onCreatePollClick} style={{ width: "100%" }}>
-            Criar poll
-          </Button>
-          <Button onClick={() => signOut(auth)} style={{ width: "100%" }}>
-            Logout
-          </Button>
-        </Flex>
-      </Card>
+      <Flex flexDirection="column">
+        <Link to={MY_POLLS}>
+          <Flex alignItems="center" flex="1" marginBottom={GRID(1)}>
+            <ArrowLeft fill={COLORS.GREEN_MAIN} />
+            <Text
+              size={TYPOGRAPHY.FontSize.MEDIUM}
+              lineHeight={TYPOGRAPHY.LineHeight.MEDIUM}
+              weight={TYPOGRAPHY.FontWeight.REGULAR}
+              color={COLORS.GREEN_MAIN}
+            >
+              Minhas polls
+            </Text>
+          </Flex>
+        </Link>
+        <Card
+          padding={GRID(2)}
+          style={{ flexDirection: "column", maxWidth: "320px", width: "100%" }}
+        >
+          <Text>
+            <b>Usuário:</b> {user.email}
+          </Text>
+          <Flex mt={GRID(1)}>
+            <Text weight={TYPOGRAPHY.FontWeight.SEMI_BOLD}>Sala: </Text>
+            <Badge statusText={user.uid} />
+          </Flex>
+          <Flex flexDirection="column" gap={GRID(1)} mt={GRID(3)}>
+            <Button onClick={onCreatePollClick} style={{ width: "100%" }}>
+              Criar poll
+            </Button>
+            <Button onClick={() => signOut(auth)} style={{ width: "100%" }}>
+              Logout
+            </Button>
+          </Flex>
+        </Card>
+      </Flex>
     </Flex>
   );
 };
