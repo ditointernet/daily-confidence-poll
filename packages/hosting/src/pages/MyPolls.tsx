@@ -3,7 +3,13 @@ import { ptBR } from "date-fns/locale";
 import { formatRelative } from "date-fns";
 import { Link } from "react-router-dom";
 import { useCollection } from "react-firebase-hooks/firestore";
-import { collection, getFirestore, query, where } from "firebase/firestore";
+import {
+  collection,
+  getFirestore,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 
 import { HOME, POLL_BY_ID } from "../constants/routes";
 import { useFirebaseAuthUser } from "../containers/AuthProvider";
@@ -15,7 +21,11 @@ const MyPolls: React.FC = () => {
   const pollsCollection = collection(firestore, "polls");
 
   const [myPollsSnapshot, isLoading, didError] = useCollection(
-    query(pollsCollection, where("ownerId", "==", user.uid))
+    query(
+      pollsCollection,
+      where("ownerId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    )
   );
 
   const myPolls = useMemo(
