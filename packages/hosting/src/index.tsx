@@ -12,6 +12,7 @@ initFirebase();
 const GlobalStyle = createGlobalStyle`
   #root {
     height: 100%;
+    padding: 0 8px;
   }
 `;
 
