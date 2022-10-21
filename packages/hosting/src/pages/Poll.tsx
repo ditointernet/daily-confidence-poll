@@ -25,6 +25,17 @@ import {
 } from "../constants/types";
 import Participant from "../components/Participant";
 import React, { useEffect, useState } from "react";
+import {
+  AppearenceType,
+  Badge,
+  Button,
+  Divider,
+  Flex,
+  Status,
+  Text,
+  ButtonAppearance,
+} from "@ditointernet/uai-components";
+import { COLORS, GRID, TYPOGRAPHY } from "@ditointernet/uai-foundation";
 
 const Poll: React.FC = () => {
   const { pollId } = useParams<Record<"pollId", string>>();
@@ -44,6 +55,21 @@ const Poll: React.FC = () => {
   const currentSnapshots = Object.keys(_users).length;
 
   const user = useFirebaseAuthUser()!;
+
+  const mappedPollStatus = {
+    FINISHED: {
+      appearence: AppearenceType.SUCCESS,
+      text: "Votação finalizada",
+    },
+    VOTING_IN_PROGRESS: {
+      appearence: AppearenceType.WARNING,
+      text: "Votação em andamento",
+    },
+    NOT_STARTED: {
+      appearence: AppearenceType.DISABLED,
+      text: "Votação não iniciada",
+    },
+  };
 
   useEffect(() => {
     const participantIds = Object.keys(poll?.hasParticipantVoted ?? {});
@@ -174,31 +200,68 @@ const Poll: React.FC = () => {
       );
 
   return (
-    <>
-      <h1>{poll.ownerId}</h1>
-      <h3>{poll.status}</h3>
-      {isPollOwner &&
-        poll.status !== PollStatuses.FINISHED &&
-        !!participants.length && (
-          <button onClick={onAdvancePollClick}>
-            {poll.status === PollStatuses.NOT_STARTED
-              ? "Iniciar poll"
-              : "Finalizar poll"}
-          </button>
-        )}
+    <Flex flexDirection="column" style={{ padding: GRID(2) }}>
+      <Flex justifyContent="space-between" alignItems="center">
+        <Flex flexDirection="column">
+          <Flex mb={GRID(2)}>
+            <Text weight={TYPOGRAPHY.FontWeight.SEMI_BOLD}>ID da sala: </Text>
+            <Badge statusText={poll.ownerId} />
+          </Flex>
+          <Flex>
+            <Text weight={TYPOGRAPHY.FontWeight.SEMI_BOLD}>Status: </Text>
+            <Status
+              appearence={mappedPollStatus[poll.status].appearence}
+              text={mappedPollStatus[poll.status].text}
+            />
+          </Flex>
+        </Flex>
+        {isPollOwner &&
+          poll.status !== PollStatuses.FINISHED &&
+          !!participants.length && (
+            <Button onClick={onAdvancePollClick} large>
+              {poll.status === PollStatuses.NOT_STARTED
+                ? "Iniciar poll"
+                : "Finalizar poll"}
+            </Button>
+          )}
+      </Flex>
+      <Divider style={{ margin: `${GRID(3)} 0` }} />
+
       {isCurrentUserParticipating &&
         poll.status === PollStatuses.VOTING_IN_PROGRESS && (
-          <div>
-            <button onClick={onVotePollClick} data-vote="1">
-              1
-            </button>
-            <button onClick={onVotePollClick} data-vote="2">
-              2
-            </button>
-            <button onClick={onVotePollClick} data-vote="3">
-              3
-            </button>
-          </div>
+          <>
+            <Text
+              mb={GRID(1)}
+              color={COLORS.GRAY_5}
+              size={TYPOGRAPHY.FontSize.LARGE}
+              lineHeight={TYPOGRAPHY.LineHeight.LARGE}
+            >
+              Qual seu nível de confiança na sprint?
+            </Text>
+            <Flex gap={GRID(1)}>
+              <Button
+                appearance={ButtonAppearance.tertiary}
+                onClick={onVotePollClick}
+                data-vote="1"
+              >
+                1 - Pouco confiante
+              </Button>
+              <Button
+                appearance={ButtonAppearance.tertiary}
+                onClick={onVotePollClick}
+                data-vote="2"
+              >
+                2 - Atenção em alguns pontos
+              </Button>
+              <Button
+                appearance={ButtonAppearance.tertiary}
+                onClick={onVotePollClick}
+                data-vote="3"
+              >
+                3 - Muito confiante
+              </Button>
+            </Flex>
+          </>
         )}
       {poll.status === PollStatuses.NOT_STARTED && (
         <>
@@ -216,7 +279,7 @@ const Poll: React.FC = () => {
       {participants.map((participant) => (
         <Participant key={participant.participantId} {...participant} />
       ))}
-    </>
+    </Flex>
   );
 };
 
