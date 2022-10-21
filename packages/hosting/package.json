@@ -5,7 +5,7 @@
   "dependencies": {
     "@ditointernet/uai-components": "4.25.0",
     "@ditointernet/uai-foundation": "1.1.1",
-    "@ditointernet/uai-icons": "1.5.1",
+    "@ditointernet/uai-icons": "1.6.0",
     "@testing-library/jest-dom": "5.16.4",
     "@testing-library/react": "13.3.0",
     "@testing-library/user-event": "13.5.0",
