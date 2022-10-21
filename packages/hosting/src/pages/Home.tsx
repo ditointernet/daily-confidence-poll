@@ -36,7 +36,7 @@ const Home: React.FC = () => {
     <Flex justifyContent="center" alignItems="center" height="100%">
       <Card
         padding={GRID(2)}
-        style={{ flexDirection: "column", minWidth: "320px" }}
+        style={{ flexDirection: "column", maxWidth: "320px", width: "100%" }}
       >
         <Text>
           <b>Usuário:</b> {user.email}
