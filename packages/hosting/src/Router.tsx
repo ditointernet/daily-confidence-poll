@@ -1,12 +1,19 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
+import AuthProvider from "./containers/AuthProvider";
+import { Home, Login, Poll, MyPolls } from "./pages";
 import {
   AuthenticatedRoute,
   UnauthenticatedRoute,
 } from "./containers/middlewares";
-import { Home, Login, Poll } from "./pages";
-import { AUTH, AUTH_LOGIN, HOME, POLLS, POLL_BY_ID } from "./constants/routes";
-import AuthProvider from "./containers/AuthProvider";
+import {
+  AUTH,
+  AUTH_LOGIN,
+  HOME,
+  MY_POLLS,
+  POLLS,
+  POLL_BY_ID,
+} from "./constants/routes";
 
 function Router() {
   return (
@@ -20,6 +27,7 @@ function Router() {
         <Route element={<AuthenticatedRoute />}>
           <Route path={HOME} element={<Home />} />
           <Route path={POLLS} element={<Outlet />}>
+            <Route path={MY_POLLS} element={<MyPolls />} />
             <Route path={POLL_BY_ID} element={<Poll />} />
             <Route path="" element={<Navigate to={HOME} replace />} />
           </Route>
