@@ -6,6 +6,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          cache: 'yarn'
+          node-version: 16
       - run: yarn && yarn --cwd packages/hosting build
       - uses: ditointernet/action-hosting-deploy@v0
         with:
