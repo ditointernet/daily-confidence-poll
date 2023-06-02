@@ -2,6 +2,8 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { HOME } from "../constants/routes";
+import { Button, Flex } from "@ditointernet/uai-components";
+import { GRID } from "@ditointernet/uai-foundation";
 
 const Login: React.FC = () => {
   const auth = getAuth();
@@ -21,7 +23,13 @@ const Login: React.FC = () => {
       .catch(console.error);
   }
 
-  return <button onClick={onGoogleLoginClick}>login com google</button>;
+  return (
+    <Flex py={GRID(1)}>
+      <Button onClick={onGoogleLoginClick} large>
+        Login com google
+      </Button>
+    </Flex>
+  );
 };
 
 export default Login;

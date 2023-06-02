@@ -25,9 +25,33 @@ import {
 } from "../constants/types";
 import Participant from "../components/Participant";
 import React, { useEffect, useState } from "react";
+import {
+  AppearanceType,
+  Button,
+  Col,
+  Divider,
+  Flex,
+  Row,
+  ScopeButton,
+  Status,
+  Text,
+} from "@ditointernet/uai-components";
+import styled from "styled-components";
+import { COLORS, GRID, TYPOGRAPHY } from "@ditointernet/uai-foundation";
 
 const Poll: React.FC = () => {
+  const date = new Date();
   const { pollId } = useParams<Record<"pollId", string>>();
+  const daysOfTheWeek = [
+    "domingo",
+    "segunda-feira",
+    "terça-feira",
+    "quarta-feira",
+    "quinta-feira",
+    "sexta-feira",
+    "sábado",
+  ];
+  const currentWeek = daysOfTheWeek[date.getDay()];
 
   const firestore = getFirestore();
   const pollsCollection = collection(firestore, "polls");
@@ -40,6 +64,7 @@ const Poll: React.FC = () => {
     Record<number, Array<IUser & { id: string }>>
   >([]);
   const [votes, setVotes] = useState<Record<string, VoteRange>>({});
+  const [confidenceValue, setConfidenceValue] = useState("");
   const users = Object.values(_users).flat();
   const currentSnapshots = Object.keys(_users).length;
 
@@ -141,9 +166,8 @@ const Poll: React.FC = () => {
     }).catch((err) => console.error(err.code));
   }
 
-  function onVotePollClick(event: React.MouseEvent<HTMLButtonElement>) {
-    const vote =
-      parseInt(event.currentTarget.getAttribute("data-vote") ?? "", 10) ?? 1;
+  function onVotePollClick() {
+    const vote = parseInt(confidenceValue) ?? 1;
 
     const voteRef = doc(pollsCollection, pollId, "votes", user.uid);
 
@@ -173,49 +197,103 @@ const Poll: React.FC = () => {
         })
       );
 
+  const mappedStatus = {
+    NOT_STARTED: { appearance: AppearanceType.WARNING, text: "Não iniciado" },
+    VOTING_IN_PROGRESS: {
+      appearance: AppearanceType.DRAFT,
+      text: "Em progresso",
+    },
+    FINISHED: { appearance: AppearanceType.SUCCESS, text: "Finalizado" },
+  };
+
+  const items = [
+    {
+      key: "1",
+      label: "Baixa (1)",
+    },
+    {
+      key: "2",
+      label: "Média (2)",
+    },
+    {
+      key: "3",
+      label: "Alta (3)",
+    },
+  ];
+
   return (
     <>
-      <h1>{poll.ownerId}</h1>
-      <h3>{poll.status}</h3>
-      {isPollOwner &&
-        poll.status !== PollStatuses.FINISHED &&
-        !!participants.length && (
-          <button onClick={onAdvancePollClick}>
-            {poll.status === PollStatuses.NOT_STARTED
-              ? "Iniciar poll"
-              : "Finalizar poll"}
-          </button>
+      <Flex justifyContent="space-between" alignItems="center">
+        <Flex flexDirection="column">
+          <Text mb={GRID(1)} size={TYPOGRAPHY.FontSize.LARGE}>
+            Daily da <b>{currentWeek}</b>
+          </Text>
+          <Flex gap={GRID(1)}>
+            <Tag>ID: {pollId}</Tag>
+            <Status
+              appearance={mappedStatus[poll.status].appearance}
+              text={mappedStatus[poll.status].text}
+            />
+          </Flex>
+        </Flex>
+        {poll.status === PollStatuses.NOT_STARTED && (
+          <>
+            {!isCurrentUserParticipating ? (
+              <Button onClick={onJoinPollClick}>Entrar na poll</Button>
+            ) : (
+              <Button onClick={onLeavePollClick}>Sair da poll</Button>
+            )}
+          </>
         )}
+        {isPollOwner &&
+          poll.status !== PollStatuses.FINISHED &&
+          !!participants.length && (
+            <Button onClick={onAdvancePollClick}>
+              {poll.status === PollStatuses.NOT_STARTED
+                ? "Iniciar poll"
+                : "Finalizar poll"}
+            </Button>
+          )}
+      </Flex>
+
+      <Divider />
+
       {isCurrentUserParticipating &&
         poll.status === PollStatuses.VOTING_IN_PROGRESS && (
-          <div>
-            <button onClick={onVotePollClick} data-vote="1">
-              1
-            </button>
-            <button onClick={onVotePollClick} data-vote="2">
-              2
-            </button>
-            <button onClick={onVotePollClick} data-vote="3">
-              3
-            </button>
-          </div>
+          <Flex flexDirection="column" mb={GRID(3)}>
+            <Text color={COLORS.GRAY_5} mb={GRID(0.5)}>
+              Qual a sua confiança para a sprint?
+            </Text>
+            <Flex gap={GRID(2)}>
+              <ScopeButton
+                items={items}
+                onChange={(item) => {
+                  setConfidenceValue(item.key);
+                }}
+                value={confidenceValue}
+              />
+              <Button onClick={() => onVotePollClick()}>Votar</Button>
+            </Flex>
+          </Flex>
         )}
-      {poll.status === PollStatuses.NOT_STARTED && (
-        <>
-          <br />
-          {!isCurrentUserParticipating && (
-            <button onClick={onJoinPollClick}>entrar na poll</button>
-          )}
-          <br />
-          {isCurrentUserParticipating && (
-            <button onClick={onLeavePollClick}>sair da poll</button>
-          )}
-        </>
-      )}
-      <h3>Participants</h3>
-      {participants.map((participant) => (
-        <Participant key={participant.participantId} {...participant} />
-      ))}
+      <Flex flexDirection="column" mb={GRID(2)}>
+        <Text color={COLORS.GRAY_7} weight={TYPOGRAPHY.FontWeight.SEMI_BOLD}>
+          Participantes
+        </Text>
+        <Text size={TYPOGRAPHY.FontSize.OVERLINE} color={COLORS.GRAY_5}>
+          TOTAL: <b>{participants.length}</b> / VOTANTES:{" "}
+          {participants.filter((participant) => participant.hasVoted)?.length ||
+            0}
+        </Text>
+      </Flex>
+
+      <Row gutter={[16, 16]}>
+        {participants.map((participant) => (
+          <Col xl={6} lg={8} xs={24} key={participant.participantId}>
+            <Participant {...participant} />
+          </Col>
+        ))}
+      </Row>
     </>
   );
 };
@@ -229,5 +307,15 @@ function partitionBy<T>(arr: T[], size: number): T[][] {
 
   return partitions;
 }
+
+const Tag = styled(Flex)`
+  background-color: ${COLORS.GRAY_2};
+  color: ${COLORS.GRAY_6};
+  border-radius: 4px;
+  padding: ${GRID(0.5)} ${GRID(1)};
+  height: ${GRID(3)};
+  font-weight: ${TYPOGRAPHY.FontWeight.MEDIUM};
+  font-size: ${TYPOGRAPHY.FontSize.OVERLINE};
+`;
 
 export default Poll;

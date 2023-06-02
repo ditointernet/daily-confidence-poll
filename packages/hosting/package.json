@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@ditointernet/uai-components": "4.25.0",
+    "@ditointernet/uai-components": "4.56.1",
     "@ditointernet/uai-foundation": "1.1.1",
     "@ditointernet/uai-icons": "1.6.0",
     "@testing-library/jest-dom": "5.16.4",
