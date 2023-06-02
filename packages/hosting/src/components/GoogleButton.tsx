@@ -1,10 +1,8 @@
 import styled from "styled-components";
-import { ReactComponent as GoogleIcon } from "../assets/google-icon.svg";
 import { COLORS, GRID } from "@ditointernet/uai-foundation";
 
 const GoogleButton = ({ onClick }: { onClick: () => void }) => (
   <CustomButton type="button" onClick={onClick}>
-    <GoogleIcon />
     <span>Login com google</span>
   </CustomButton>
 );
@@ -23,6 +21,7 @@ const CustomButton = styled.button`
   transition: box-shadow 0.3s;
 
   span {
+    font-family: "Roboto", sans-serif;
     font-weight: bold;
     font-size: 14px;
     color: #757575;
