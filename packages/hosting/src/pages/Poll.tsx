@@ -15,6 +15,9 @@ import {
 import { useParams } from "react-router-dom";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 
+import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
+
 import { useFirebaseAuthUser } from "../containers/AuthProvider";
 import {
   IPoll,
@@ -45,16 +48,7 @@ import Navbar from "../components/Navbar";
 const Poll: React.FC = () => {
   const date = new Date();
   const { pollId } = useParams<Record<"pollId", string>>();
-  const daysOfTheWeek = [
-    "domingo",
-    "segunda-feira",
-    "terça-feira",
-    "quarta-feira",
-    "quinta-feira",
-    "sexta-feira",
-    "sábado",
-  ];
-  const currentWeek = daysOfTheWeek[date.getDay()];
+  const currentWeek = format(date, "EEEE", { locale: ptBR });
 
   const firestore = getFirestore();
   const pollsCollection = collection(firestore, "polls");
