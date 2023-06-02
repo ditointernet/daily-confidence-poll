@@ -27,7 +27,7 @@ const Login: React.FC = () => {
 
   return (
     <Flex padding={GRID(1)}>
-      <GoogleButton onClick={onGoogleLoginClick}>
+      <GoogleButton type="button" onClick={onGoogleLoginClick}>
         <GoogleIcon />
         <span>Login com google</span>
       </GoogleButton>
