@@ -10,8 +10,6 @@ import reportWebVitals from "./reportWebVitals";
 initFirebase();
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap');
-
   #root {
     height: 100%;
     padding: 0;
