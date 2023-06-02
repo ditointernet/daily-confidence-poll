@@ -29,7 +29,6 @@ import {
 import Participant from "../components/Participant";
 import React, { useEffect, useState } from "react";
 import {
-  AppearanceType,
   Button,
   ButtonAppearance,
   Col,
@@ -40,10 +39,11 @@ import {
   Status,
   Text,
 } from "@ditointernet/uai-components";
-import styled from "styled-components";
 import { COLORS, GRID, TYPOGRAPHY } from "@ditointernet/uai-foundation";
 import Container from "../components/Container";
 import Navbar from "../components/Navbar";
+import { mappedStatus } from "../utils/contants";
+import Tag from "../components/Tag";
 
 const Poll: React.FC = () => {
   const date = new Date();
@@ -195,15 +195,6 @@ const Poll: React.FC = () => {
         })
       );
 
-  const mappedStatus = {
-    NOT_STARTED: { appearance: AppearanceType.WARNING, text: "Não iniciado" },
-    VOTING_IN_PROGRESS: {
-      appearance: AppearanceType.DRAFT,
-      text: "Em progresso",
-    },
-    FINISHED: { appearance: AppearanceType.SUCCESS, text: "Finalizado" },
-  };
-
   const items = [
     {
       key: "1",
@@ -328,15 +319,5 @@ function partitionBy<T>(arr: T[], size: number): T[][] {
 
   return partitions;
 }
-
-const Tag = styled(Flex)`
-  background-color: ${COLORS.GRAY_2};
-  color: ${COLORS.GRAY_6};
-  border-radius: 4px;
-  padding: ${GRID(0.5)} ${GRID(1)};
-  height: ${GRID(3)};
-  font-weight: ${TYPOGRAPHY.FontWeight.MEDIUM};
-  font-size: ${TYPOGRAPHY.FontSize.OVERLINE};
-`;
 
 export default Poll;
