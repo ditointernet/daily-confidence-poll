@@ -4,7 +4,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { HOME } from "../constants/routes";
 import { Flex } from "@ditointernet/uai-components";
 import { GRID } from "@ditointernet/uai-foundation";
-import GoogleButton from "../components/GoogleButton";
+import { ReactComponent as GoogleIcon } from "../assets/google-icon.svg";
 
 const Login: React.FC = () => {
   const auth = getAuth();
@@ -26,7 +26,10 @@ const Login: React.FC = () => {
 
   return (
     <Flex padding={GRID(1)}>
-      <GoogleButton onClick={onGoogleLoginClick} />
+      <button id="google-button" onClick={onGoogleLoginClick}>
+        <GoogleIcon />
+        <span>Login com google</span>
+      </button>
     </Flex>
   );
 };
