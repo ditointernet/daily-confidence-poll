@@ -56,7 +56,7 @@ const MyPolls: React.FC = () => {
         >
           Minhas polls
         </Text>
-        <Flex flexDirection="column" mt={GRID(3)} gap={GRID(1)}>
+        <Flex flexDirection="column" my={GRID(3)} gap={GRID(1)}>
           {myPolls.map((poll) => (
             <Link key={poll.id} to={POLL_BY_ID.replace(":pollId", poll.id)}>
               <AnimatedCard padding={`${GRID(1)} ${GRID(2)}`}>
