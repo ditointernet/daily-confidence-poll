@@ -23,7 +23,6 @@ const CustomButton = styled.button`
   transition: box-shadow 0.3s;
 
   span {
-    font-family: "Roboto", sans-serif;
     font-weight: bold;
     font-size: 14px;
     color: #757575;
