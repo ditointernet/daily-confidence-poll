@@ -16,7 +16,13 @@ import { HOME } from "../constants/routes";
 import { Link } from "react-router-dom";
 
 const Navbar = () => (
-  <NavbarTag>
+  <NavbarTag
+    as="nav"
+    justifyContent="space-between"
+    alignItems="center"
+    mb={GRID(4)}
+    padding={`${GRID(2)} ${GRID(3)}`}
+  >
     <Link to={HOME}>
       <Flex alignItems="center">
         <ArrowLeft fill={COLORS.GREEN_MAIN} />
@@ -41,14 +47,8 @@ const Navbar = () => (
   </NavbarTag>
 );
 
-const NavbarTag = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding: ${GRID(2)} ${GRID(3)};
+const NavbarTag = styled(Flex)`
   box-shadow: ${SHADOWS.DEFAULT("down")};
-  margin-bottom: ${GRID(4)};
 `;
 
 export default Navbar;
