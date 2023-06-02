@@ -24,7 +24,7 @@ const Login: React.FC = () => {
   }
 
   return (
-    <Flex py={GRID(1)}>
+    <Flex padding={GRID(1)}>
       <Button onClick={onGoogleLoginClick} large>
         Login com google
       </Button>
