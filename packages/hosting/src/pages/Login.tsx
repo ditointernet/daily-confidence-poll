@@ -1,11 +1,11 @@
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import styled from "styled-components";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
 import { HOME } from "../constants/routes";
 import { Flex } from "@ditointernet/uai-components";
 import { COLORS, GRID } from "@ditointernet/uai-foundation";
 import { ReactComponent as GoogleIcon } from "../assets/google-icon.svg";
-import styled from "styled-components";
 
 const Login: React.FC = () => {
   const auth = getAuth();
