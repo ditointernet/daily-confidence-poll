@@ -22,4 +22,4 @@ jobs:
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_DAILY_CONFIDENCE_POLL }}'
-          projectId: daily-confidence-poll
+          projectId: '${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}'
