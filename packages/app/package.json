@@ -1,0 +1,52 @@
+{
+  "name": "app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "./.start.sh",
+    "build": "tsc && vite build",
+    "env:update": "./.update-env.sh",
+    "env:create": "./.create-env.sh",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ditointernet/uai-components": "4.86.0",
+    "@ditointernet/uai-foundation": "1.9.0",
+    "@ditointernet/uai-icons": "1.17.0",
+    "@testing-library/jest-dom": "5.16.4",
+    "@testing-library/react": "13.3.0",
+    "@testing-library/user-event": "13.5.0",
+    "@types/jest": "27.5.2",
+    "@types/node": "16.11.39",
+    "@types/react": "18.0.12",
+    "@types/react-dom": "18.0.5",
+    "@types/styled-components": "5.1.15",
+    "date-fns": "2.29.3",
+    "firebase": "9.8.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-firebase-hooks": "5.0.3",
+    "react-router-dom": "6.3.0",
+    "react-scripts": "5.0.1",
+    "styled-components": "5.3.3",
+    "typescript": "4.7.3",
+    "web-vitals": "2.1.4"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.47",
+    "@types/react-dom": "18.2.17",
+    "@types/styled-components": "5.1.26",
+    "@types/styled-system": "5.1.15",
+    "@typescript-eslint/eslint-plugin": "6.14.0",
+    "@typescript-eslint/parser": "6.14.0",
+    "@vitejs/plugin-react": "4.2.1",
+    "eslint": "8.55.0",
+    "eslint-plugin-react-hooks": "4.6.0",
+    "eslint-plugin-react-refresh": "0.4.5",
+    "typescript": "5.2.2",
+    "vite": "5.0.8",
+    "vite-plugin-svgr": "^4.2.0"
+  }
+}
